@@ -38,10 +38,6 @@ export function getPawnMoves(coord, board) {
   const distance = coord.row === homeRowIndex ? 2 : 1
   const direction = thisPiece.player === 0 ? -1 : 1
   
-  console.log({homeRowIndex});
-  console.log(coord.row);
-  console.log({distance});
-
   // vertical
   for (let i = 0; i < distance; i++) {
     const nextRow = coord.row + (i + 1) * direction

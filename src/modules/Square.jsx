@@ -25,12 +25,14 @@ export default function Square({
   pieceClasses += isAllowedMove ? " bg-cyan-300/50" : " bg-cyan-300/0"
   // pieceClasses += piece && piece.player === 1 ? " text-black" : ""
 
-  if (piece) piece.playerTeam = piece ? (piece.player === 1 ? "b" : "w") : ""
-
   return (
     <div onClick={onClick} className={squareClasses}>
       <div className={pieceClasses}>
-        {piece && <img src={pieceImages[piece.playerTeam + piece.type]} />}
+        {piece && (
+          <img
+            src={pieceImages[`${piece.player === 0 ? "w" : "b"}${piece.type}`]}
+          />
+        )}
       </div>
     </div>
   )

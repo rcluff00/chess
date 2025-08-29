@@ -12,6 +12,7 @@ function App() {
   const [board, setBoard] = useState(INITIAL_BOARD)
   const [selectedCoord, setSelectedCoord] = useState(null)
 
+  const whoseTurn = getWhoseTurn(turns)
   const allowedMoves = selectedCoord
     ? getAllowedMoves(selectedCoord, board)
     : []
@@ -25,8 +26,16 @@ function App() {
     setSelectedCoord(null)
   }
 
+  function getWhoseTurn(turns) {
+    return turns.length % 2
+  }
+
   function handleSquareClick(coord) {
     const { row, col } = coord
+    const targetPiece = board[coord.row][coord.col]
+    const selectedPiece = selectedCoord
+      ? board[selectedCoord.row][selectedCoord.col]
+      : null
 
     // deselect same square
     if (
@@ -37,23 +46,25 @@ function App() {
       setSelectedCoord(null)
     }
 
-    // move to valid square
+    // move selected piece to valid square
     else if (
+      selectedPiece &&
       allowedMoves &&
       allowedMoves.some((m) => m.row === row && m.col === col)
     ) {
       movePiece(selectedCoord, coord)
       setTurns((prevTurns) => {
         const updatedTurns = [board, ...prevTurns]
-
         return updatedTurns
       })
     }
 
     // select new piece
-    else {
+    else if (targetPiece && targetPiece.player === whoseTurn) {
       setSelectedCoord(coord)
     }
+
+    // else if()
   }
 
   return (
