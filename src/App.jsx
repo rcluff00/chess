@@ -107,6 +107,7 @@ function App() {
     setTurns([])
     setSelectedCoord(null)
     setGameStatus(null)
+    setPendingPromotion(null)
   }
 
   function handlePromotion(pieceType) {
