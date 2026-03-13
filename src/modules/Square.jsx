@@ -5,6 +5,7 @@ export default function Square({
   isDark,
   isSelected,
   isAllowedMove,
+  isInCheck,
   onClick,
 }) {
   let squareClasses =
@@ -16,10 +17,13 @@ export default function Square({
     squareClasses += " bg-gray-200"
   }
 
-  squareClasses +=
-    piece && isSelected
-      ? " border-cyan-300 z-10 shadow-xl"
-      : " border-transparent"
+  if (isInCheck) {
+    squareClasses += " border-red-500 z-10 shadow-xl"
+  } else if (piece && isSelected) {
+    squareClasses += " border-cyan-300 z-10 shadow-xl"
+  } else {
+    squareClasses += " border-transparent"
+  }
 
   let pieceClasses = "items-center flex h-3/4 w-3/4 justify-center rounded-full"
   pieceClasses += isAllowedMove ? " bg-cyan-300/50" : " bg-cyan-300/0"
