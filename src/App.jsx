@@ -27,6 +27,18 @@ function App() {
   const activePlayer = getActivePlayer(turns)
   const allowedMoves = selectedCoord
     ? getAllowedMoves(selectedCoord, board).filter((move) => {
+        const selectedPiece = board[selectedCoord.row][selectedCoord.col]
+        const isCastle = selectedPiece?.type === 'k' && Math.abs(move.col - selectedCoord.col) === 2
+
+        if (isCastle) {
+          if (isSquareInCheck(selectedCoord, board)) return false
+          const intermediateCol = (selectedCoord.col + move.col) / 2
+          const testBoard2 = structuredClone(board)
+          testBoard2[selectedCoord.row][intermediateCol] = testBoard2[selectedCoord.row][selectedCoord.col]
+          testBoard2[selectedCoord.row][selectedCoord.col] = null
+          if (isSquareInCheck({ row: selectedCoord.row, col: intermediateCol }, testBoard2)) return false
+        }
+
         const testBoard = structuredClone(board)
         testBoard[move.row][move.col] = testBoard[selectedCoord.row][selectedCoord.col]
         testBoard[selectedCoord.row][selectedCoord.col] = null
@@ -81,8 +93,9 @@ function App() {
 
   function movePiece(prevCoord, targetCoord) {
     const piece = board[prevCoord.row][prevCoord.col]
-    board[prevCoord.row][prevCoord.col] = null // remove piece
-    board[targetCoord.row][targetCoord.col] = piece // replace piece
+    piece.hasMoved = true
+    board[prevCoord.row][prevCoord.col] = null
+    board[targetCoord.row][targetCoord.col] = piece
   }
 
   function getActivePlayer(turns) {
@@ -143,6 +156,19 @@ function App() {
       allowedMoves.some((m) => m.row === clickedCoord.row && m.col === clickedCoord.col)
     ) {
       movePiece(selectedCoord, clickedCoord)
+
+      // handle castling - move the rook too
+      if (selectedPiece.type === 'k' && Math.abs(clickedCoord.col - selectedCoord.col) === 2) {
+        const row = selectedCoord.row
+        const isKingside = clickedCoord.col > selectedCoord.col
+        const rookFromCol = isKingside ? 7 : 0
+        const rookToCol = isKingside ? 5 : 3
+        const rook = board[row][rookFromCol]
+        rook.hasMoved = true
+        board[row][rookToCol] = rook
+        board[row][rookFromCol] = null
+      }
+
       const newBoard = structuredClone(board)
       setBoard(newBoard)
       setSelectedCoord(null)

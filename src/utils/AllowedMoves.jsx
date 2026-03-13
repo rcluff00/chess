@@ -244,6 +244,27 @@ export function getKingMoves(coord, board) {
     }
   }
 
+  // castling
+  if (!thisPiece.hasMoved) {
+    const row = coord.row
+
+    // kingside
+    const kingsideRook = board[row][7]
+    if (kingsideRook?.type === 'r' && !kingsideRook.hasMoved) {
+      if (!board[row][5] && !board[row][6]) {
+        allowedSquares.push({ row, col: 6 })
+      }
+    }
+
+    // queenside
+    const queensideRook = board[row][0]
+    if (queensideRook?.type === 'r' && !queensideRook.hasMoved) {
+      if (!board[row][1] && !board[row][2] && !board[row][3]) {
+        allowedSquares.push({ row, col: 2 })
+      }
+    }
+  }
+
   return allowedSquares
 }
 
