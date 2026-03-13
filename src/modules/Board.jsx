@@ -5,9 +5,14 @@ export default function Board({
   onSquareClick,
   allowedMoves,
   selectedCoord,
+  activePlayer,
 }) {
+  const borderClass = activePlayer === "w"
+    ? "border-b-4 border-t-4 border-b-cyan-300 border-t-transparent"
+    : "border-b-4 border-t-4 border-t-cyan-300 border-b-transparent"
+
   return (
-    <div className="grid grid-cols-8">
+    <div className={`grid grid-cols-8 ${borderClass}`}>
       {board.map((row, rowIndex) =>
         row.map((piece, colIndex) => {
           const coord = { row: rowIndex, col: colIndex }

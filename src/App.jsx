@@ -178,6 +178,7 @@ function App() {
         onSquareClick={handleSquareClick}
         allowedMoves={allowedMoves}
         selectedCoord={selectedCoord}
+        activePlayer={activePlayer}
       />
       <CapturedList pieces={pieces.b.captured} />
     </main>
