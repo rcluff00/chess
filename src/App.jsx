@@ -87,6 +87,13 @@ function App() {
     return turns.length % 2 ? "b" : "w"
   }
 
+  function resetGame() {
+    setBoard(structuredClone(INITIAL_BOARD))
+    setTurns([])
+    setSelectedCoord(null)
+    setGameStatus(null)
+  }
+
   function handleSquareClick(clickedCoord) {
     if (gameStatus === "checkmate" || gameStatus === "stalemate") return
 
@@ -205,18 +212,29 @@ function App() {
       ? getKingCoord(activePlayer, board)
       : null
 
-  const statusMessage = {
-    check: `${activePlayer === "w" ? "White" : "Black"} is in check!`,
-    checkmate: `Checkmate! ${activePlayer === "w" ? "Black" : "White"} wins!`,
-    stalemate: "Stalemate! It's a draw.",
-  }[gameStatus]
+  const gameOverMessage =
+    gameStatus === "checkmate"
+      ? `Checkmate! ${activePlayer === "w" ? "Black" : "White"} wins!`
+      : gameStatus === "stalemate"
+        ? "Stalemate! It's a draw."
+        : null
 
   return (
     <main className="mx-auto w-full max-w-xl rounded bg-slate-500 p-2">
       <Header logo={reactLogo} />
-      {statusMessage && (
-        <div className="my-1 rounded bg-red-500 px-3 py-2 text-center font-bold text-white">
-          {statusMessage}
+      {(gameStatus === "check" || gameOverMessage) && (
+        <div className="my-1 flex items-center justify-between rounded bg-amber-500 px-3 py-2 font-bold text-white">
+          <span>
+            {gameOverMessage ?? `${activePlayer === "w" ? "White" : "Black"} is in check!`}
+          </span>
+          {gameOverMessage && (
+            <button
+              onClick={resetGame}
+              className="rounded bg-white px-4 py-1 text-black hover:bg-gray-200"
+            >
+              New Game
+            </button>
+          )}
         </div>
       )}
       <CapturedList pieces={pieces.w.captured} />

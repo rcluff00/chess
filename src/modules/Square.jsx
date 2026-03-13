@@ -18,7 +18,7 @@ export default function Square({
   }
 
   if (isInCheck) {
-    squareClasses += " border-red-500 z-10 shadow-xl"
+    squareClasses += " border-amber-500 z-10 shadow-xl"
   } else if (piece && isSelected) {
     squareClasses += " border-cyan-300 z-10 shadow-xl"
   } else {
