@@ -1,46 +1,17 @@
-export const INITIAL_BOARD = [
-  [
-    { type: "r", player: 'b', id: "br1" },
-    { type: "n", player: 'b', id: "bn1" },
-    { type: "b", player: 'b', id: "bb1" },
-    { type: "q", player: 'b', id: "bq0" },
-    { type: "k", player: 'b', id: "bk0" },
-    { type: "b", player: 'b', id: "bb2" },
-    { type: "n", player: 'b', id: "bn2" },
-    { type: "r", player: 'b', id: "br2" },
-  ],
-  [
-    { type: "p", player: 'b', id: "bp1" },
-    { type: "p", player: 'b', id: "bp2" },
-    { type: "p", player: 'b', id: "bp3" },
-    { type: "p", player: 'b', id: "bp4" },
-    { type: "p", player: 'b', id: "bp5" },
-    { type: "p", player: 'b', id: "bp6" },
-    { type: "p", player: 'b', id: "bp7" },
-    { type: "p", player: 'b', id: "bp8" },
-  ],
-  [null, null, null, null, null, null, null, null],
-  [null, null, null, null, null, null, null, null],
-  [null, null, null, null, null, null, null, null],
-  [null, null, null, null, null, null, null, null],
-  [
-    { type: "p", player: 'w', id: "bp1" },
-    { type: "p", player: 'w', id: "bp2" },
-    { type: "p", player: 'w', id: "bp3" },
-    { type: "p", player: 'w', id: "bp4" },
-    { type: "p", player: 'w', id: "bp5" },
-    { type: "p", player: 'w', id: "bp6" },
-    { type: "p", player: 'w', id: "bp7" },
-    { type: "p", player: 'w', id: "bp8" },
-  ],
-  [
-    { type: "r", player: 'w', id: "br1" },
-    { type: "n", player: 'w', id: "bn1" },
-    { type: "b", player: 'w', id: "bb1" },
-    { type: "q", player: 'w', id: "bq0" },
-    { type: "k", player: 'w', id: "bk0" },
-    { type: "b", player: 'w', id: "bb2" },
-    { type: "n", player: 'w', id: "bn2" },
-    { type: "r", player: 'w', id: "br2" },
-  ],
-]
+const BACK_RANK = ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r']
+
+export const INITIAL_BOARD = (() => {
+  const board = Array(8).fill(null).map(() => Array(8).fill(null))
+
+  BACK_RANK.forEach((type, col) => {
+    board[0][col] = { type, player: 'b', id: `b${type}${col}` }
+    board[7][col] = { type, player: 'w', id: `w${type}${col}` }
+  })
+
+  for (let col = 0; col < 8; col++) {
+    board[1][col] = { type: 'p', player: 'b', id: `bp${col + 1}` }
+    board[6][col] = { type: 'p', player: 'w', id: `wp${col + 1}` }
+  }
+
+  return board
+})()
