@@ -91,11 +91,13 @@ function App() {
     return result
   }
 
-  function movePiece(prevCoord, targetCoord) {
-    const piece = board[prevCoord.row][prevCoord.col]
+  function movePiece(board, prevCoord, targetCoord) {
+    const newBoard = structuredClone(board)
+    const piece = newBoard[prevCoord.row][prevCoord.col]
     piece.hasMoved = true
-    board[prevCoord.row][prevCoord.col] = null
-    board[targetCoord.row][targetCoord.col] = piece
+    newBoard[prevCoord.row][prevCoord.col] = null
+    newBoard[targetCoord.row][targetCoord.col] = piece
+    return newBoard
   }
 
   function getActivePlayer(turns) {
@@ -156,7 +158,7 @@ function App() {
       allowedMoves &&
       allowedMoves.some((m) => m.row === clickedCoord.row && m.col === clickedCoord.col)
     ) {
-      movePiece(selectedCoord, clickedCoord)
+      let newBoard = movePiece(board, selectedCoord, clickedCoord)
 
       // handle castling - move the rook too
       if (selectedPiece.type === 'k' && Math.abs(clickedCoord.col - selectedCoord.col) === 2) {
@@ -164,13 +166,12 @@ function App() {
         const isKingside = clickedCoord.col > selectedCoord.col
         const rookFromCol = isKingside ? 7 : 0
         const rookToCol = isKingside ? 5 : 3
-        const rook = board[row][rookFromCol]
+        const rook = newBoard[row][rookFromCol]
         rook.hasMoved = true
-        board[row][rookToCol] = rook
-        board[row][rookFromCol] = null
+        newBoard[row][rookToCol] = rook
+        newBoard[row][rookFromCol] = null
       }
 
-      const newBoard = structuredClone(board)
       setBoard(newBoard)
       setSelectedCoord(null)
 
