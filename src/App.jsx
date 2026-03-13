@@ -4,6 +4,7 @@ import Header from "./modules/Header"
 import Board from "./modules/Board"
 import { INITIAL_BOARD } from "./utils/InitalBoard"
 import { getAllowedMoves } from "./utils/AllowedMoves"
+import { pieceImages } from "./utils/Pieces"
 import CapturedList from "./modules/CapturedList"
 import { useEffect } from "react"
 import { useRef } from "react"
@@ -15,6 +16,7 @@ function App() {
   const [board, setBoard] = useState(structuredClone(INITIAL_BOARD))
   const [selectedCoord, setSelectedCoord] = useState(null)
   const [gameStatus, setGameStatus] = useState(null) // null | "check" | "checkmate" | "stalemate"
+  const [pendingPromotion, setPendingPromotion] = useState(null) // { coord, player }
 
   const turnsRef = useRef(turns)
   useEffect(() => {
@@ -94,8 +96,31 @@ function App() {
     setGameStatus(null)
   }
 
+  function handlePromotion(pieceType) {
+    const { coord, player } = pendingPromotion
+    board[coord.row][coord.col] = { type: pieceType, player, id: `${player}${pieceType}_promo` }
+    const newBoard = structuredClone(board)
+    setBoard(newBoard)
+    setTurns((prevTurns) => [newBoard, ...prevTurns])
+    setPendingPromotion(null)
+
+    const opponent = player === "w" ? "b" : "w"
+    const opponentKingCoord = getKingCoord(opponent, newBoard)
+    const opponentInCheck = isSquareInCheck(opponentKingCoord, newBoard)
+    const opponentHasMoves = getPlayerLegalMoves(opponent, newBoard).length > 0
+
+    if (!opponentHasMoves) {
+      setGameStatus(opponentInCheck ? "checkmate" : "stalemate")
+    } else if (opponentInCheck) {
+      setGameStatus("check")
+    } else {
+      setGameStatus(null)
+    }
+  }
+
   function handleSquareClick(clickedCoord) {
     if (gameStatus === "checkmate" || gameStatus === "stalemate") return
+    if (pendingPromotion) return
 
     const targetPiece = board[clickedCoord.row][clickedCoord.col]
     const selectedPiece = selectedCoord
@@ -121,8 +146,15 @@ function App() {
       const newBoard = structuredClone(board)
       setBoard(newBoard)
       setSelectedCoord(null)
-      setTurns((prevTurns) => [newBoard, ...prevTurns])
 
+      // handle pawn promotion
+      const promotionRow = activePlayer === "w" ? 0 : 7
+      if (selectedPiece.type === "p" && clickedCoord.row === promotionRow) {
+        setPendingPromotion({ coord: clickedCoord, player: activePlayer })
+        return
+      }
+
+      setTurns((prevTurns) => [newBoard, ...prevTurns])
       const opponent = activePlayer === "w" ? "b" : "w"
       const opponentKingCoord = getKingCoord(opponent, newBoard)
       const opponentInCheck = isSquareInCheck(opponentKingCoord, newBoard)
@@ -222,6 +254,22 @@ function App() {
   return (
     <main className="mx-auto w-full max-w-xl rounded bg-slate-500 p-2">
       <Header logo={reactLogo} />
+      {pendingPromotion && (
+        <div className="my-1 flex items-center justify-between rounded bg-amber-500 px-3 py-2 font-bold text-white">
+          <span>Promote your pawn:</span>
+          <div className="flex gap-1">
+            {["q", "r", "b", "n"].map((type) => (
+              <button
+                key={type}
+                onClick={() => handlePromotion(type)}
+                className="rounded bg-white p-1 hover:bg-gray-200"
+              >
+                <img className="h-8 w-8" src={pieceImages[`${pendingPromotion.player}${type}`]} />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       {(gameStatus === "check" || gameOverMessage) && (
         <div className="my-1 flex items-center justify-between rounded bg-amber-500 px-3 py-2 font-bold text-white">
           <span>
