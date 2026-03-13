@@ -27,10 +27,16 @@ function App() {
   const pieces = getPieces(board)
   const activePlayer = getActivePlayer(turns)
   const allowedMoves = selectedCoord
-    ? getAllowedMoves(selectedCoord, board)
+    ? getAllowedMoves(selectedCoord, board).filter((move) => {
+        const testBoard = structuredClone(board)
+        testBoard[move.row][move.col] = testBoard[selectedCoord.row][selectedCoord.col]
+        testBoard[selectedCoord.row][selectedCoord.col] = null
+        const kingCoord = getKingCoord(activePlayer, testBoard)
+        return !isSquareInCheck(kingCoord, testBoard)
+      })
     : []
 
-  function getKingCoord(player) {
+  function getKingCoord(player, board) {
     for (let row = 0; row < board.length; row++) {
       for (let col = 0; col < board[row].length; col++) {
         const piece = board[row][col]
@@ -106,21 +112,11 @@ function App() {
       allowedMoves &&
       allowedMoves.some((m) => m.row === row && m.col === col)
     ) {
-      const prevBoard = structuredClone(board)
-
       movePiece(selectedCoord, coord)
-      const kingCoord = getKingCoord(activePlayer)
-
-      // check if move puts own king in check
-      if (isSquareInCheck(kingCoord, board)) {
-        console.log("panic")
-        setBoard(prevBoard)
-      } else {
-        const newBoard = structuredClone(board) // snapshot after move
-        setBoard(newBoard)
-        setSelectedCoord(null)
-        setTurns((prevTurns) => [newBoard, ...prevTurns]) // store the snapshot
-      }
+      const newBoard = structuredClone(board)
+      setBoard(newBoard)
+      setSelectedCoord(null)
+      setTurns((prevTurns) => [newBoard, ...prevTurns])
     }
 
     // select new piece
