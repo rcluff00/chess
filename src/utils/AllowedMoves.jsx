@@ -44,10 +44,12 @@ export function getPawnMoves(coord, board) {
     // stop if outside board
     if (!isSquareInBounds(nextRow, nextCol, board)) break
 
+    // stop if blocked by piece
     const targetPiece = board[nextRow][nextCol]
-
     if (!targetPiece) {
       allowedSquares.push({ row: nextRow, col: nextCol })
+    } else {
+      break
     }
   }
 
