@@ -1,5 +1,3 @@
-const BOARD_SIZE = 8
-
 export function getAllowedMoves(coord, board) {
   const piece = board[coord.row][coord.col]
 
@@ -33,18 +31,18 @@ export function getAllowedMoves(coord, board) {
 export function getPawnMoves(coord, board) {
   let allowedSquares = []
   const thisPiece = board[coord.row][coord.col]
-  
-  const homeRowIndex = thisPiece.player === 0 ? 6 : 1
+
+  const homeRowIndex = thisPiece.player === "w" ? 6 : 1
   const distance = coord.row === homeRowIndex ? 2 : 1
-  const direction = thisPiece.player === 0 ? -1 : 1
-  
+  const direction = thisPiece.player === "w" ? -1 : 1
+
   // vertical
   for (let i = 0; i < distance; i++) {
     const nextRow = coord.row + (i + 1) * direction
     const nextCol = coord.col
 
     // stop if outside board
-    if (!isSquareInBounds(nextRow, nextCol)) break
+    if (!isSquareInBounds(nextRow, nextCol, board)) break
 
     const targetPiece = board[nextRow][nextCol]
 
@@ -58,7 +56,7 @@ export function getPawnMoves(coord, board) {
     const captureRow = coord.row + direction
     const captureCol = coord.col + lr
 
-    if (isSquareInBounds(captureRow, captureCol)) {
+    if (isSquareInBounds(captureRow, captureCol, board)) {
       const targetPiece = board[captureRow][captureCol]
       if (targetPiece && targetPiece.player !== thisPiece.player) {
         allowedSquares.push({ row: captureRow, col: captureCol })
@@ -84,7 +82,7 @@ export function getRookMoves(coord, board) {
     let row = coord.row + dRow
     let col = coord.col + dCol
 
-    while (isSquareInBounds(row, col)) {
+    while (isSquareInBounds(row, col, board)) {
       const targetPiece = board[row][col]
 
       if (!targetPiece) {
@@ -119,7 +117,7 @@ export function getBishopMoves(coord, board) {
     let row = coord.row + dRow
     let col = coord.col + dCol
 
-    while (isSquareInBounds(row, col)) {
+    while (isSquareInBounds(row, col, board)) {
       const piece = board[row][col]
 
       if (!piece) {
@@ -157,7 +155,7 @@ export function getKnightMoves(coord, board) {
   for (const { dRow, dCol } of directions) {
     let row = coord.row + dRow
     let col = coord.col + dCol
-    if (isSquareInBounds(row, col)) {
+    if (isSquareInBounds(row, col, board)) {
       const targetPiece = board[row][col]
 
       if (!targetPiece) {
@@ -192,7 +190,7 @@ export function getQueenMoves(coord, board) {
     let row = coord.row + dRow
     let col = coord.col + dCol
 
-    while (isSquareInBounds(row, col)) {
+    while (isSquareInBounds(row, col, board)) {
       const piece = board[row][col]
 
       if (!piece) {
@@ -231,13 +229,15 @@ export function getKingMoves(coord, board) {
     let row = coord.row + dRow
     let col = coord.col + dCol
 
-    const piece = board[row][col]
+    if (isSquareInBounds(row, col, board)) {
+      const piece = board[row][col]
 
-    if (!piece) {
-      allowedSquares.push({ row, col })
-    } else {
-      if (piece.player !== thisPiece.player) {
+      if (!piece) {
         allowedSquares.push({ row, col })
+      } else {
+        if (piece.player !== thisPiece.player) {
+          allowedSquares.push({ row, col })
+        }
       }
     }
   }
@@ -245,6 +245,8 @@ export function getKingMoves(coord, board) {
   return allowedSquares
 }
 
-function isSquareInBounds(row, col) {
-  return row >= 0 && row <= BOARD_SIZE - 1 && col >= 0 && col <= BOARD_SIZE - 1
+function isSquareInBounds(row, col, board) {
+  return (
+    row >= 0 && row <= board.length - 1 && col >= 0 && col <= board.length - 1
+  )
 }

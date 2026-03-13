@@ -30,7 +30,7 @@ export default function Square({
       <div className={pieceClasses}>
         {piece && (
           <img
-            src={pieceImages[`${piece.player === 0 ? "w" : "b"}${piece.type}`]}
+            src={pieceImages[`${piece.player}${piece.type}`]}
           />
         )}
       </div>
