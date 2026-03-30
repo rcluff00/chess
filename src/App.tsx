@@ -29,7 +29,7 @@ function App() {
   const pieces = getPieces(board)
   const activePlayer = getActivePlayer(turns)
   const allowedMoves = selectedCoord
-    ? (getAllowedMoves(selectedCoord, board) ?? []).filter((move) => {
+    ? getAllowedMoves(selectedCoord, board).filter((move) => {
         const selectedPiece = board[selectedCoord.row]?.[selectedCoord.col]
         const isCastle = selectedPiece?.type === "k" && Math.abs(move.col - selectedCoord.col) === 2
 
@@ -240,7 +240,7 @@ function App() {
       for (let col = 0; col < board[row]!.length; col++) {
         const piece = board[row]![col]
         if (piece && piece.player === player) {
-          const legal = (getAllowedMoves({ row, col }, board) ?? []).filter((move) => {
+          const legal = getAllowedMoves({ row, col }, board).filter((move) => {
             const testBoard = structuredClone(board)
             testBoard[move.row]![move.col] = testBoard[row]![col] ?? null
             testBoard[row]![col] = null
@@ -259,7 +259,7 @@ function App() {
       for (let col = 0; col < board[row]!.length; col++) {
         const piece = board[row]![col]
         if (piece) {
-          const allowedMoves = getAllowedMoves({ row, col }, board) ?? []
+          const allowedMoves = getAllowedMoves({ row, col }, board)
           if (allowedMoves.some((m) => m.row === coord.row && m.col === coord.col)) {
             return true
           }

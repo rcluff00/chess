@@ -1,32 +1,19 @@
 import type { Board, Coord } from "./types.js"
-export function getAllowedMoves(coord: Coord, board: Board) {
+export function getAllowedMoves(coord: Coord, board: Board): Coord[] {
   const piece = board[coord.row]?.[coord.col]
 
   if (piece) {
     switch (piece.type) {
-      case "p":
-        return getPawnMoves(coord, board)
-        break
-      case "r":
-        return getRookMoves(coord, board)
-        break
-      case "b":
-        return getBishopMoves(coord, board)
-        break
-      case "n":
-        return getKnightMoves(coord, board)
-        break
-      case "q":
-        return getQueenMoves(coord, board)
-        break
-      case "k":
-        return getKingMoves(coord, board)
-        break
-
-      default:
-        break
+      case "p": return getPawnMoves(coord, board)
+      case "r": return getRookMoves(coord, board)
+      case "b": return getBishopMoves(coord, board)
+      case "n": return getKnightMoves(coord, board)
+      case "q": return getQueenMoves(coord, board)
+      case "k": return getKingMoves(coord, board)
     }
   }
+
+  return []
 }
 
 export function getPawnMoves(coord: Coord, board: Board) {
