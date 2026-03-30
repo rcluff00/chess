@@ -12,3 +12,5 @@ export type Coord = {
   row: number
   col: number
 }
+
+export type Board = (Piece | null)[][]
