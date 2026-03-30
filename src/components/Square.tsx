@@ -1,4 +1,14 @@
-import { pieceImages } from "../utils/Pieces"
+import { pieceImages } from "../utils/Pieces.js"
+import type { Piece } from "../utils/types.ts"
+
+type SquareProps = {
+  piece: Piece | null
+  isDark: boolean
+  isSelected: boolean
+  isAllowedMove: boolean
+  isInCheck: boolean
+  onClick: () => void
+}
 
 export default function Square({
   piece,
@@ -7,7 +17,7 @@ export default function Square({
   isAllowedMove,
   isInCheck,
   onClick,
-}) {
+}: SquareProps) {
   let squareClasses =
     "flex aspect-square cursor-pointer items-center justify-center box-border border-4"
 
@@ -27,7 +37,6 @@ export default function Square({
 
   let pieceClasses = "items-center flex h-3/4 w-3/4 justify-center rounded-full"
   pieceClasses += isAllowedMove ? " bg-cyan-300/50" : " bg-cyan-300/0"
-  // pieceClasses += piece && piece.player === 1 ? " text-black" : ""
 
   return (
     <div onClick={onClick} className={squareClasses}>

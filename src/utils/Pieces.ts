@@ -1,3 +1,4 @@
+import type { Player, PieceType } from "./types.ts"
 import wp from "../assets/pieces/wp.png"
 import bp from "../assets/pieces/bp.png"
 import wr from "../assets/pieces/wr.png"
@@ -11,7 +12,7 @@ import bq from "../assets/pieces/bq.png"
 import wk from "../assets/pieces/wk.png"
 import bk from "../assets/pieces/bk.png"
 
-export const pieceImages = {
+export const pieceImages: Record<`${Player}${PieceType}`, string> = {
   wp, bp,
   wr, br,
   wn, bn,

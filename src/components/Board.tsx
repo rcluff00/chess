@@ -1,4 +1,14 @@
-import Square from "./Square"
+import Square from "./Square.js"
+import type { Board, Coord, Player } from "../utils/types.ts"
+
+type BoardProps = {
+  board: Board
+  onSquareClick: (coord: Coord) => void
+  allowedMoves: Coord[]
+  selectedCoord: Coord | null
+  activePlayer: Player
+  checkedKingCoord: Coord | null
+}
 
 export default function Board({
   board,
@@ -7,7 +17,7 @@ export default function Board({
   selectedCoord,
   activePlayer,
   checkedKingCoord,
-}) {
+}: BoardProps) {
   const borderClass = activePlayer === "w"
     ? "border-b-4 border-t-4 border-b-cyan-300 border-t-transparent"
     : "border-b-4 border-t-4 border-t-cyan-300 border-b-transparent"

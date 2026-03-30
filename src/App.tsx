@@ -1,22 +1,25 @@
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 import reactLogo from "./assets/react.svg"
-import Header from "./modules/Header"
-import Board from "./modules/Board"
-import { INITIAL_BOARD } from "./utils/InitalBoard"
-import { getAllowedMoves } from "./utils/AllowedMoves"
-import { pieceImages } from "./utils/Pieces"
-import CapturedList from "./modules/CapturedList"
-import { useEffect } from "react"
-import { useRef } from "react"
+import Header from "./components/Header.js"
+import Board from "./components/Board.js"
+import { INITIAL_BOARD } from "./utils/InitialBoard.js"
+import { getAllowedMoves } from "./utils/AllowedMoves.js"
+import { pieceImages } from "./utils/Pieces.js"
+import CapturedList from "./components/CapturedList.js"
+import type { Board as BoardType, Coord, Piece, Player, PieceType } from "./utils/types.js"
 
 import "./App.css"
 
+type GameStatus = "check" | "checkmate" | "stalemate" | null
+type PendingPromotion = { coord: Coord; player: Player } | null
+type PlayerPieces = Record<Player, { remaining: Piece[]; captured: Piece[] }>
+
 function App() {
-  const [turns, setTurns] = useState([])
-  const [board, setBoard] = useState(structuredClone(INITIAL_BOARD))
-  const [selectedCoord, setSelectedCoord] = useState(null)
-  const [gameStatus, setGameStatus] = useState(null) // null | "check" | "checkmate" | "stalemate"
-  const [pendingPromotion, setPendingPromotion] = useState(null) // { coord, player }
+  const [turns, setTurns] = useState<BoardType[]>([])
+  const [board, setBoard] = useState<BoardType>(structuredClone(INITIAL_BOARD))
+  const [selectedCoord, setSelectedCoord] = useState<Coord | null>(null)
+  const [gameStatus, setGameStatus] = useState<GameStatus>(null)
+  const [pendingPromotion, setPendingPromotion] = useState<PendingPromotion>(null)
 
   const turnsRef = useRef(turns)
   useEffect(() => {
@@ -26,31 +29,31 @@ function App() {
   const pieces = getPieces(board)
   const activePlayer = getActivePlayer(turns)
   const allowedMoves = selectedCoord
-    ? getAllowedMoves(selectedCoord, board).filter((move) => {
-        const selectedPiece = board[selectedCoord.row][selectedCoord.col]
-        const isCastle = selectedPiece?.type === 'k' && Math.abs(move.col - selectedCoord.col) === 2
+    ? (getAllowedMoves(selectedCoord, board) ?? []).filter((move) => {
+        const selectedPiece = board[selectedCoord.row]?.[selectedCoord.col]
+        const isCastle = selectedPiece?.type === "k" && Math.abs(move.col - selectedCoord.col) === 2
 
         if (isCastle) {
           if (isSquareInCheck(selectedCoord, board)) return false
           const intermediateCol = (selectedCoord.col + move.col) / 2
           const testBoard2 = structuredClone(board)
-          testBoard2[selectedCoord.row][intermediateCol] = testBoard2[selectedCoord.row][selectedCoord.col]
-          testBoard2[selectedCoord.row][selectedCoord.col] = null
+          testBoard2[selectedCoord.row]![intermediateCol] = testBoard2[selectedCoord.row]![selectedCoord.col] ?? null
+          testBoard2[selectedCoord.row]![selectedCoord.col] = null
           if (isSquareInCheck({ row: selectedCoord.row, col: intermediateCol }, testBoard2)) return false
         }
 
         const testBoard = structuredClone(board)
-        testBoard[move.row][move.col] = testBoard[selectedCoord.row][selectedCoord.col]
-        testBoard[selectedCoord.row][selectedCoord.col] = null
+        testBoard[move.row]![move.col] = testBoard[selectedCoord.row]![selectedCoord.col] ?? null
+        testBoard[selectedCoord.row]![selectedCoord.col] = null
         const kingCoord = getKingCoord(activePlayer, testBoard)
         return !isSquareInCheck(kingCoord, testBoard)
       })
     : []
 
-  function getKingCoord(player, board) {
+  function getKingCoord(player: Player, board: BoardType): Coord | undefined {
     for (let row = 0; row < board.length; row++) {
-      for (let col = 0; col < board[row].length; col++) {
-        const piece = board[row][col]
+      for (let col = 0; col < board[row]!.length; col++) {
+        const piece = board[row]![col]
         if (piece) {
           if (piece.type === "k" && piece.player === player) return { row, col }
         }
@@ -58,49 +61,47 @@ function App() {
     }
   }
 
-  function getPieces(board) {
+  function getPieces(board: BoardType): PlayerPieces {
     const initialPieces = INITIAL_BOARD.flat()
-      .filter(Boolean)
-      .reduce((acc, piece) => {
-        if (!acc[piece.player])
-          acc[piece.player] = { initial: [], remaining: [], captured: [] }
-        acc[piece.player].initial.push(piece)
+      .filter((p): p is Piece => p !== null)
+      .reduce<Record<string, { initial: Piece[] }>>((acc, piece) => {
+        if (!acc[piece.player]) acc[piece.player] = { initial: [] }
+        acc[piece.player]!.initial.push(piece)
         return acc
       }, {})
 
     const remainingPieces = board
       .flat()
-      .filter(Boolean)
-      .reduce((acc, piece) => {
+      .filter((p): p is Piece => p !== null)
+      .reduce<Record<string, Piece[]>>((acc, piece) => {
         if (!acc[piece.player]) acc[piece.player] = []
-        acc[piece.player].push(piece)
+        acc[piece.player]!.push(piece)
         return acc
       }, {})
 
-    const result = {}
+    const result = {} as PlayerPieces
     for (const player in initialPieces) {
-      const initial = initialPieces[player].initial
+      const initial = initialPieces[player]!.initial
       const remaining = remainingPieces[player] || []
       const captured = initial.filter(
         (p) => !remaining.some((r) => r.id === p.id),
       )
-
-      result[player] = { remaining, captured }
+      result[player as Player] = { remaining, captured }
     }
 
     return result
   }
 
-  function movePiece(board, prevCoord, targetCoord) {
+  function movePiece(board: BoardType, prevCoord: Coord, targetCoord: Coord): BoardType {
     const newBoard = structuredClone(board)
-    const piece = newBoard[prevCoord.row][prevCoord.col]
+    const piece = newBoard[prevCoord.row]![prevCoord.col]!
     piece.hasMoved = true
-    newBoard[prevCoord.row][prevCoord.col] = null
-    newBoard[targetCoord.row][targetCoord.col] = piece
+    newBoard[prevCoord.row]![prevCoord.col] = null
+    newBoard[targetCoord.row]![targetCoord.col] = piece
     return newBoard
   }
 
-  function getActivePlayer(turns) {
+  function getActivePlayer(turns: BoardType[]): Player {
     return turns.length % 2 ? "b" : "w"
   }
 
@@ -112,15 +113,16 @@ function App() {
     setPendingPromotion(null)
   }
 
-  function handlePromotion(pieceType) {
+  function handlePromotion(pieceType: PieceType) {
+    if (!pendingPromotion) return
     const { coord, player } = pendingPromotion
-    board[coord.row][coord.col] = { type: pieceType, player, id: `${player}${pieceType}_promo` }
+    board[coord.row]![coord.col] = { type: pieceType, player, id: `${player}${pieceType}_promo` }
     const newBoard = structuredClone(board)
     setBoard(newBoard)
     setTurns((prevTurns) => [newBoard, ...prevTurns])
     setPendingPromotion(null)
 
-    const opponent = player === "w" ? "b" : "w"
+    const opponent: Player = player === "w" ? "b" : "w"
     const opponentKingCoord = getKingCoord(opponent, newBoard)
     const opponentInCheck = isSquareInCheck(opponentKingCoord, newBoard)
     const opponentHasMoves = getPlayerLegalMoves(opponent, newBoard).length > 0
@@ -134,13 +136,13 @@ function App() {
     }
   }
 
-  function handleSquareClick(clickedCoord) {
+  function handleSquareClick(clickedCoord: Coord) {
     if (gameStatus === "checkmate" || gameStatus === "stalemate") return
     if (pendingPromotion) return
 
-    const targetPiece = board[clickedCoord.row][clickedCoord.col]
+    const targetPiece = board[clickedCoord.row]?.[clickedCoord.col]
     const selectedPiece = selectedCoord
-      ? board[selectedCoord.row][selectedCoord.col]
+      ? board[selectedCoord.row]?.[selectedCoord.col]
       : null
 
     // deselect same square
@@ -155,21 +157,22 @@ function App() {
     // move selected piece
     else if (
       selectedPiece &&
+      selectedCoord &&
       allowedMoves &&
       allowedMoves.some((m) => m.row === clickedCoord.row && m.col === clickedCoord.col)
     ) {
       let newBoard = movePiece(board, selectedCoord, clickedCoord)
 
       // handle castling - move the rook too
-      if (selectedPiece.type === 'k' && Math.abs(clickedCoord.col - selectedCoord.col) === 2) {
+      if (selectedPiece.type === "k" && Math.abs(clickedCoord.col - selectedCoord.col) === 2) {
         const row = selectedCoord.row
         const isKingside = clickedCoord.col > selectedCoord.col
         const rookFromCol = isKingside ? 7 : 0
         const rookToCol = isKingside ? 5 : 3
-        const rook = newBoard[row][rookFromCol]
+        const rook = newBoard[row]![rookFromCol]!
         rook.hasMoved = true
-        newBoard[row][rookToCol] = rook
-        newBoard[row][rookFromCol] = null
+        newBoard[row]![rookToCol] = rook
+        newBoard[row]![rookFromCol] = null
       }
 
       setBoard(newBoard)
@@ -183,7 +186,7 @@ function App() {
       }
 
       setTurns((prevTurns) => [newBoard, ...prevTurns])
-      const opponent = activePlayer === "w" ? "b" : "w"
+      const opponent: Player = activePlayer === "w" ? "b" : "w"
       const opponentKingCoord = getKingCoord(opponent, newBoard)
       const opponentInCheck = isSquareInCheck(opponentKingCoord, newBoard)
       const opponentHasMoves = getPlayerLegalMoves(opponent, newBoard).length > 0
@@ -206,7 +209,7 @@ function App() {
   }
 
   useEffect(() => {
-    const handleKeyDown = (event) => {
+    const handleKeyDown = (event: KeyboardEvent) => {
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
         event.preventDefault()
         undoMove()
@@ -222,7 +225,7 @@ function App() {
     if (currentTurns.length < 1) return
 
     const prevTurns = currentTurns.slice(1) // drop the latest move
-    const prevBoard = structuredClone(currentTurns[1] || INITIAL_BOARD) 
+    const prevBoard = structuredClone(currentTurns[1] || INITIAL_BOARD)
     // fallback to initial if no more turns
 
     setTurns(prevTurns)
@@ -231,16 +234,16 @@ function App() {
     setGameStatus(null)
   }
 
-  function getPlayerLegalMoves(player, board) {
-    const moves = []
+  function getPlayerLegalMoves(player: Player, board: BoardType): Coord[] {
+    const moves: Coord[] = []
     for (let row = 0; row < board.length; row++) {
-      for (let col = 0; col < board[row].length; col++) {
-        const piece = board[row][col]
+      for (let col = 0; col < board[row]!.length; col++) {
+        const piece = board[row]![col]
         if (piece && piece.player === player) {
-          const legal = getAllowedMoves({ row, col }, board).filter((move) => {
+          const legal = (getAllowedMoves({ row, col }, board) ?? []).filter((move) => {
             const testBoard = structuredClone(board)
-            testBoard[move.row][move.col] = testBoard[row][col]
-            testBoard[row][col] = null
+            testBoard[move.row]![move.col] = testBoard[row]![col] ?? null
+            testBoard[row]![col] = null
             return !isSquareInCheck(getKingCoord(player, testBoard), testBoard)
           })
           moves.push(...legal)
@@ -250,15 +253,14 @@ function App() {
     return moves
   }
 
-  function isSquareInCheck(coord, board) {
+  function isSquareInCheck(coord: Coord | undefined, board: BoardType): boolean {
+    if (!coord) return false
     for (let row = 0; row < board.length; row++) {
-      for (let col = 0; col < board[row].length; col++) {
-        const piece = board[row][col]
+      for (let col = 0; col < board[row]!.length; col++) {
+        const piece = board[row]![col]
         if (piece) {
-          const allowedMoves = getAllowedMoves({ row, col }, board)
-          if (
-            allowedMoves.some((m) => m.row === coord.row && m.col === coord.col)
-          ) {
+          const allowedMoves = getAllowedMoves({ row, col }, board) ?? []
+          if (allowedMoves.some((m) => m.row === coord.row && m.col === coord.col)) {
             return true
           }
         }
@@ -269,7 +271,7 @@ function App() {
 
   const checkedKingCoord =
     gameStatus === "check" || gameStatus === "checkmate"
-      ? getKingCoord(activePlayer, board)
+      ? getKingCoord(activePlayer, board) ?? null
       : null
 
   const gameOverMessage =
@@ -289,10 +291,10 @@ function App() {
             {["q", "r", "b", "n"].map((type) => (
               <button
                 key={type}
-                onClick={() => handlePromotion(type)}
+                onClick={() => handlePromotion(type as PieceType)}
                 className="rounded bg-white p-1 hover:bg-gray-200"
               >
-                <img className="h-8 w-8" src={pieceImages[`${pendingPromotion.player}${type}`]} />
+                <img className="h-8 w-8" src={pieceImages[`${pendingPromotion.player}${type as PieceType}`]} />
               </button>
             ))}
           </div>
