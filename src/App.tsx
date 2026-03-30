@@ -62,34 +62,17 @@ function App() {
   }
 
   function getPieces(board: BoardType): PlayerPieces {
-    const initialPieces = INITIAL_BOARD.flat()
-      .filter((p): p is Piece => p !== null)
-      .reduce<Record<string, { initial: Piece[] }>>((acc, piece) => {
-        if (!acc[piece.player]) acc[piece.player] = { initial: [] }
-        acc[piece.player]!.initial.push(piece)
-        return acc
-      }, {})
+    const allInitial = INITIAL_BOARD.flat().filter((p): p is Piece => p !== null)
+    const allRemaining = board.flat().filter((p): p is Piece => p !== null)
 
-    const remainingPieces = board
-      .flat()
-      .filter((p): p is Piece => p !== null)
-      .reduce<Record<string, Piece[]>>((acc, piece) => {
-        if (!acc[piece.player]) acc[piece.player] = []
-        acc[piece.player]!.push(piece)
-        return acc
-      }, {})
-
-    const result = {} as PlayerPieces
-    for (const player in initialPieces) {
-      const initial = initialPieces[player]!.initial
-      const remaining = remainingPieces[player] || []
-      const captured = initial.filter(
-        (p) => !remaining.some((r) => r.id === p.id),
-      )
-      result[player as Player] = { remaining, captured }
+    function forPlayer(player: Player) {
+      const initial = allInitial.filter((p) => p.player === player)
+      const remaining = allRemaining.filter((p) => p.player === player)
+      const captured = initial.filter((p) => !remaining.some((r) => r.id === p.id))
+      return { remaining, captured }
     }
 
-    return result
+    return { w: forPlayer("w"), b: forPlayer("b") }
   }
 
   function movePiece(board: BoardType, prevCoord: Coord, targetCoord: Coord): BoardType {
