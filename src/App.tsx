@@ -14,6 +14,10 @@ type GameStatus = "check" | "checkmate" | "stalemate" | null
 type PendingPromotion = { coord: Coord; player: Player } | null
 type PlayerPieces = Record<Player, { remaining: Piece[]; captured: Piece[] }>
 
+function getOpponent(player: Player): Player {
+  return player === "w" ? "b" : "w"
+}
+
 function App() {
   const [turns, setTurns] = useState<BoardType[]>([])
   const [board, setBoard] = useState<BoardType>(structuredClone(INITIAL_BOARD))
@@ -105,10 +109,10 @@ function App() {
     setTurns((prevTurns) => [newBoard, ...prevTurns])
     setPendingPromotion(null)
 
-    const opponent: Player = player === "w" ? "b" : "w"
-    const opponentKingCoord = getKingCoord(opponent, newBoard)
+    const opp = getOpponent(player)
+    const opponentKingCoord = getKingCoord(opp, newBoard)
     const opponentInCheck = isSquareInCheck(opponentKingCoord, newBoard)
-    const opponentHasMoves = getPlayerLegalMoves(opponent, newBoard).length > 0
+    const opponentHasMoves = getPlayerLegalMoves(opp, newBoard).length > 0
 
     if (!opponentHasMoves) {
       setGameStatus(opponentInCheck ? "checkmate" : "stalemate")
@@ -169,10 +173,10 @@ function App() {
       }
 
       setTurns((prevTurns) => [newBoard, ...prevTurns])
-      const opponent: Player = activePlayer === "w" ? "b" : "w"
-      const opponentKingCoord = getKingCoord(opponent, newBoard)
+      const opp = getOpponent(activePlayer)
+      const opponentKingCoord = getKingCoord(opp, newBoard)
       const opponentInCheck = isSquareInCheck(opponentKingCoord, newBoard)
-      const opponentHasMoves = getPlayerLegalMoves(opponent, newBoard).length > 0
+      const opponentHasMoves = getPlayerLegalMoves(opp, newBoard).length > 0
 
       if (!opponentHasMoves) {
         setGameStatus(opponentInCheck ? "checkmate" : "stalemate")
