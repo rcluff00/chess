@@ -3,7 +3,7 @@ import type { Piece } from "../utils/types.ts"
 
 export default function CapturedList({ pieces }: { pieces: Piece[] }) {
   return (
-    <div className="grid grid-cols-16 p-2">
+    <div className="grid grid-cols-16 p-2 min-h-14">
       {pieces &&
         pieces.map((piece) => (
           <img
