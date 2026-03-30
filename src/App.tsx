@@ -19,16 +19,28 @@ function getOpponent(player: Player): Player {
 }
 
 function App() {
-  const [turns, setTurns] = useState<BoardType[]>([])
-  const [board, setBoard] = useState<BoardType>(structuredClone(INITIAL_BOARD))
+  const [turns, setTurns] = useState<BoardType[]>(() => {
+    const saved = localStorage.getItem("chess-turns")
+    return saved ? JSON.parse(saved) : []
+  })
+  const [board, setBoard] = useState<BoardType>(() => {
+    const saved = localStorage.getItem("chess-board")
+    return saved ? JSON.parse(saved) : structuredClone(INITIAL_BOARD)
+  })
   const [selectedCoord, setSelectedCoord] = useState<Coord | null>(null)
-  const [gameStatus, setGameStatus] = useState<GameStatus>(null)
+  const [gameStatus, setGameStatus] = useState<GameStatus>(() => {
+    return (localStorage.getItem("chess-gameStatus") as GameStatus) ?? null
+  })
   const [pendingPromotion, setPendingPromotion] = useState<PendingPromotion>(null)
 
   const turnsRef = useRef(turns)
+  useEffect(() => { turnsRef.current = turns }, [turns])
+  useEffect(() => { localStorage.setItem("chess-turns", JSON.stringify(turns)) }, [turns])
+  useEffect(() => { localStorage.setItem("chess-board", JSON.stringify(board)) }, [board])
   useEffect(() => {
-    turnsRef.current = turns
-  }, [turns])
+    if (gameStatus) localStorage.setItem("chess-gameStatus", gameStatus)
+    else localStorage.removeItem("chess-gameStatus")
+  }, [gameStatus])
 
   const pieces = getPieces(board)
   const activePlayer = getActivePlayer(turns)
@@ -93,6 +105,9 @@ function App() {
   }
 
   function resetGame() {
+    localStorage.removeItem("chess-board")
+    localStorage.removeItem("chess-turns")
+    localStorage.removeItem("chess-gameStatus")
     setBoard(structuredClone(INITIAL_BOARD))
     setTurns([])
     setSelectedCoord(null)
